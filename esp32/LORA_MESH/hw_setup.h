@@ -5,44 +5,22 @@
 
 // collect all external libraries here
 
-
-#if defined(ARDUINO_WIFI_LORA_32_V2)
+#if defined(WIFI_LoRa_32_V2) || defined(WIFI_LORA_32_V2)
 
 # include <heltec.h>
 # define theDisplay (*Heltec.display)
 
+// user button
+#define BUTTON_PIN KEY_BUILTIN  // for heltec?
+
+
 #else // ARDUINO_TBeam
 
-# include <OLEDDisplay.h>
-# include <SSD1306.h>
+# include <SSD1306.h> // display
 # include <Wire.h> 
 # include <LoRa.h>
 
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-// #include "esp_gap_ble_api.h"
-// #include "esp_gatts_api.h"
-// #include "esp_bt_defs.h"
-#include "esp_gatt_common_api.h"
-
 SSD1306 theDisplay(0x3c, 21, 22); // lilygo t-beam
-
-/* attempt to run the t-beam binary on Heltec - works except the screen ...
-
-void VextON(void)
-{
-        pinMode(Vext,OUTPUT);
-        digitalWrite(Vext, LOW);
-}
-
-VextON();
-SSD1306Wire *display = new SSD1306Wire(0x3c, 4, 15);// heltec lora32SDA_OLED, SCL_OLED);
-# define theDisplay (*display)
-display->init();
-pinMode(LED,OUTPUT);
-*/
 
 // GPS
 # include <TinyGPS++.h>
@@ -55,15 +33,17 @@ pinMode(LED,OUTPUT);
 # define RST     14   // GPIO14 -- SX1278's RESET
 # define DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
 
+// user button
+#define BUTTON_PIN 38 // this is for T_BEAM_V10; V7 used pin 39
+
 #endif // device specific
 
 
+// user button
+#include <Button2.h>
+
 // FS
 #include <littlefs_api.h>
-// #include <esp_littlefs.h>
-// #include <lfs_util.h>
-// #include <lfs.h>
-// #include <LITTLEFS.h>
 #include <littleFS.h>
 
 // crypto
@@ -73,8 +53,14 @@ pinMode(LED,OUTPUT);
 // WiFi and BT
 #include <WiFi.h>
 #include <WiFiAP.h>
-// #include <WiFiUdp.h>
 #include "BluetoothSerial.h"
+
+// BLE
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+#include "esp_gatt_common_api.h"
 
 
 // create instances
@@ -84,18 +70,35 @@ WiFiUDP udp;
 IPAddress broadcastIP;
 BluetoothSerial BT;
 
-#if !defined(ARDUINO_WIFI_LORA_32_V2)
+#if defined(AXP_DEBUG)
 TinyGPSPlus gps;
 HardwareSerial GPS(1);
 AXP20X_Class axp;
 #endif
 
+Button2 userButton;
+unsigned char my_mac[6];
+
+// -------------------------------------------------------------------
+
+static unsigned char OLED_state = HIGH;
+
+void OLED_toggle() {
+  OLED_state = OLED_state ? LOW : HIGH;
+  if (OLED_state == LOW) theDisplay.displayOff();
+  else                   theDisplay.displayOn();
+}
+
+void pressed(Button2& btn) {
+  // Serial.println("pressed");
+  OLED_toggle();
+}
+
 // -------------------------------------------------------------------
 
 void hw_setup() // T-BEAM or Heltec LoRa32v2
 {
-#if defined(ARDUINO_WIFI_LORA_32_V2)
-
+#if defined(WIFI_LoRa_32_V2) || defined(WIFI_LORA_32_V2)
   Heltec.begin(true /*DisplayEnable Enable*/,
                true /*Heltec.Heltec.Heltec.LoRa Disable*/,
                true /*Serial Enable*/,
@@ -108,13 +111,17 @@ void hw_setup() // T-BEAM or Heltec LoRa32v2
   delay(100);
 
   theDisplay.init();
+  theDisplay.flipScreenVertically();
   theDisplay.setFont(ArialMT_Plain_10);
   theDisplay.setTextAlignment(TEXT_ALIGN_LEFT);
 
+  /*
   pinMode(16,OUTPUT);
   digitalWrite(16, LOW);    // set GPIO16 low to reset OLED
   delay(50); 
-  digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high、
+  // digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 in high、
+  OLED_toggle();
+  */
 
   SPI.begin(SCK,MISO,MOSI,SS);
   LoRa.setPins(SS,RST,DI0);  
@@ -142,11 +149,18 @@ void hw_setup() // T-BEAM or Heltec LoRa32v2
   LoRa.setSignalBandwidth(LORA_BW);
   LoRa.setSpreadingFactor(LORA_SF);
   LoRa.setCodingRate4(LORA_CR);
+  LoRa.setPreambleLength(8);
+  LoRa.setSyncWord(LORA_SYNC_WORD);
   LoRa.receive();
 
+  // pinMode(BUTTON_PIN, INPUT);
+  userButton.begin(BUTTON_PIN);
+  userButton.setPressedHandler(pressed);
+
   Serial.println("\n** Starting Scuttlebutt vPub (LoRa, WiFi, BLE) with GOset **\n");
-  theDisplay.flipScreenVertically();
   theDisplay.clear();
+  theDisplay.display();
+
 
   // -------------------------------------------------------------------
   if (!MyFS.begin(true)) { // FORMAT_SPIFFS_IF_FAILED)){
@@ -156,7 +170,6 @@ void hw_setup() // T-BEAM or Heltec LoRa32v2
 
   // -------------------------------------------------------------------
 
-  unsigned char my_mac[6];
   esp_read_mac(my_mac, ESP_MAC_WIFI_STA);
   Serial.println(String("mac   ") + to_hex(my_mac, 6, 1));
 
@@ -174,14 +187,15 @@ void hw_setup() // T-BEAM or Heltec LoRa32v2
     Serial.println("udp   " + broadcastIP.toString() + " / " + String(tSSB_UDP_PORT));
   }
 
+#if defined(MAIN_BLEDevice_H_)
   ble_init();
+#endif
 
   BT.begin(ssid);
   BT.setPin("0000");
   BT.write(KISS_FEND);
 
   Serial.println();
-  delay(500);
 }
 
 // ---------------------------------------------------------------------------------

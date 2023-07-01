@@ -8,8 +8,8 @@
    dmx(7B) + more_data(var) + CRC32(4B)
 */
 
-#define IO_MAX_QUEUE_LEN         10
-#define LORA_INTERPACKET_TIME  1000  // millis
+#define IO_MAX_QUEUE_LEN          6
+#define LORA_INTERPACKET_TIME  1200  // millis
 #define UDP_INTERPACKET_TIME    100  // millis
 #define NR_OF_FACES               (sizeof(faces) / sizeof(void*))
 
@@ -29,9 +29,19 @@ struct face_s {
 
 struct face_s lora_face;
 struct face_s udp_face;
-struct face_s ble_face;
 struct face_s bt_face;
-struct face_s *faces[] = { &lora_face, &udp_face, &bt_face, &ble_face };
+#if defined(MAIN_BLEDevice_H_)
+  struct face_s ble_face;
+#endif
+
+struct face_s *faces[] = {
+  &lora_face,
+  &udp_face,
+  &bt_face,
+#if defined(MAIN_BLEDevice_H_)
+  &ble_face
+#endif
+};
 
 // --------------------------------------------------------------------------------
 
@@ -47,8 +57,11 @@ uint32_t crc32_ieee(unsigned char *pkt, int len) { // Ethernet/ZIP polynomial
 
 // --------------------------------------------------------------------------------
 
-BLECharacteristic *TXChar = nullptr;
-BLECharacteristic *RXChar = nullptr;
+#if defined(MAIN_BLEDevice_H_)
+
+BLECharacteristic *RXChar = nullptr; // receive
+BLECharacteristic *TXChar = nullptr; // transmit (notify)
+BLECharacteristic *STChar = nullptr; // statistics
 bool bleDeviceConnected = 0;
 char txString[128] = {0};
 
@@ -114,14 +127,21 @@ void ble_init()
   UARTServer->setCallbacks(new UARTServerCallbacks());
   // Create the BLE Service
   BLEService *UARTService = UARTServer->createService(BLE_SERVICE_UUID);
-  // Create a BLE Characteristic
+
+  // Create our BLE Characteristics
   TXChar = UARTService->createCharacteristic(BLE_CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
-  //  TXChar = UARTService->createCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
   TXChar->addDescriptor(new BLE2902());
   TXChar->setNotifyProperty(true);
   TXChar->setReadProperty(true);
+
+  STChar = UARTService->createCharacteristic(BLE_CHARACTERISTIC_UUID_ST, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+  STChar->addDescriptor(new BLE2902());
+  STChar->setNotifyProperty(true);
+  STChar->setReadProperty(true);
+
   RXChar = UARTService->createCharacteristic(BLE_CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE);
   RXChar->setCallbacks(new RXCallbacks());
+
   // Start the service
   UARTService->start();
   // Start advertising
@@ -139,6 +159,9 @@ void ble_init()
     BLEDevice::startAdvertising();
     Serial.println("Characteristic defined! Now you can read it in your phone!");
 }
+
+#endif // BLE
+
 
 // --------------------------------------------------------------------------------
 
@@ -176,14 +199,25 @@ void udp_send(unsigned char *buf, short len)
   */
 }
 
+#if defined(MAIN_BLEDevice_H_)
+
 void ble_send(unsigned char *buf, short len) {
   if (bleDeviceConnected == 0) return;
   // no CRC added, we rely on BLE's CRC
   TXChar->setValue(buf, len);
   TXChar->notify();
   Serial.printf("BLE: sent %dB: %s..\n", len, to_hex(buf,8));
-  // , to_hex(buf + len - 6, 6));
 }
+
+void ble_send_stats(unsigned char *str, short len) {
+  if (bleDeviceConnected == 0) return;
+  // no CRC added, we rely on BLE's CRC
+  STChar->setValue(str, len);
+  STChar->notify();
+  Serial.printf("BLE: sent stat %dB: %s\n", len, str);
+}
+
+#endif // BLE
 
 void bt_send(unsigned char *buf, short len)
 {
@@ -210,9 +244,11 @@ void io_init()
   udp_face.name = (char*) "udp";
   udp_face.next_delta = UDP_INTERPACKET_TIME;
   udp_face.send = udp_send;
+#if defined(MAIN_BLEDevice_H_)
   ble_face.name = (char*) "ble";
   ble_face.next_delta = UDP_INTERPACKET_TIME;
   ble_face.send = ble_send;
+#endif
   bt_face.name = (char*) "bt";
   bt_face.next_delta = UDP_INTERPACKET_TIME;
   bt_face.send = bt_send;

@@ -5,6 +5,7 @@ package nz.scuttlebutt.tremolavossbol
 // import nz.scuttlebutt.tremolavossbol.tssb.ble.BlePeers
 
 import android.app.Activity
+import android.bluetooth.BluetoothAdapter
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -21,6 +22,8 @@ import com.google.zxing.integration.android.IntentIntegrator
 import nz.scuttlebutt.tremolavossbol.crypto.IdStore
 import nz.scuttlebutt.tremolavossbol.tssb.ble.BlePeers
 import nz.scuttlebutt.tremolavossbol.tssb.*
+import nz.scuttlebutt.tremolavossbol.tssb.ble.BlePeersBroadcast
+import nz.scuttlebutt.tremolavossbol.tssb.ble.BluetoothEventListener
 import nz.scuttlebutt.tremolavossbol.utils.Constants
 import tremolavossbol.R
 import java.net.*
@@ -43,9 +46,11 @@ class MainActivity : Activity() {
     @Volatile var mc_group: InetAddress? = null
     @Volatile var mc_socket: MulticastSocket? = null
     var ble: BlePeers? = null
+    //var ble: BlePeersBroadcast? = null
     val ioLock = ReentrantLock()
     var broadcastReceiver: BroadcastReceiver? = null
     var isWifiConnected = false
+    var ble_event_listener: BluetoothEventListener? = null
 
     /*
     var broadcast_socket: DatagramSocket? = null
@@ -153,6 +158,9 @@ class MainActivity : Activity() {
         }
         registerReceiver(broadcastReceiver, IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION))
 
+        ble_event_listener = BluetoothEventListener(this)
+        registerReceiver(ble_event_listener, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+
         // val lck = ReentrantLock()
         /* disable TCP server and UDP advertisements in the tinyTremola version
 
@@ -244,7 +252,7 @@ class MainActivity : Activity() {
             // val text = data.getStringExtra("text")
             val voice = data.getByteArrayExtra("codec2")
             if (voice != null)
-                wai.return_voice(voice) // public_post_voice(text, voice)
+                wai.return_voice(voice) // public_post_with_voice(text, voice)
             return
         }
         if (result != null) {
@@ -277,7 +285,10 @@ class MainActivity : Activity() {
             tremolaState.wai.eval("b2f_new_voice('${voice}')")
         */
         }  else if (requestCode == 555 && resultCode == RESULT_OK) { // enable fine grained location
-            ble!!.startBleScan()
+            ble!!.startBluetooth()
+
+
+
         }
 
         super.onActivityResult(requestCode, resultCode, data)
@@ -294,14 +305,19 @@ class MainActivity : Activity() {
         */
 
         ble = BlePeers(this)
-        ble!!.startBleScan()
+        ble!!.startBluetooth()
+        //ble = BlePeersBroadcast(this)
+        //ble!!.checkPermissions(true)
+        //ble!!.scan()
+
     }
 
     override fun onPause() {
         Log.d("onPause", "")
         super.onPause()
-        if (ble != null)
-            ble!!.stopBleScan()
+        if (ble != null) {
+            ble!!.stopBluetooth()
+        }
         /*
         try {
             (getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager)
@@ -326,7 +342,11 @@ class MainActivity : Activity() {
         server_socket = null
         */
         super.onDestroy()
+        if (ble != null) {
+            ble!!.stopBluetooth()
+        }
         unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(ble_event_listener)
     }
 
     private fun mkSockets() {

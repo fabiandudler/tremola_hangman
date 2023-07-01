@@ -4,11 +4,16 @@
 // 2022-08-09 <christian.tschudin@unibas.ch>
 
 
-#define LORA_BAND    902E6 // USA
+// #define LORA_BAND    902E6 // USA
+#define LORA_BAND  865.5E6 // Europe
 #define LORA_BW     125000
 #define LORA_SF          7
 #define LORA_CR          5
-#define LORA_TXPOWER    17
+#define LORA_TXPOWER    20 // highpowermode, otherwise choose 17 or lower
+#define LORA_SYNC_WORD  0x58 // for "SB, Scuttlebutt". Discussion at https://blog.classycode.com/lora-sync-word-compatibility-between-sx127x-and-sx126x-460324d1787a
+
+#define LORA_LOG // enable macro for logging received pkts
+#define LORA_LOG_FILENAME  "/lora_log.txt"
 
 #define FID_LEN         32
 #define HASH_LEN        20
@@ -39,6 +44,7 @@
 #define BLE_SERVICE_UUID           "6e400001-7646-4b5b-9a50-71becce51558"
 #define BLE_CHARACTERISTIC_UUID_RX "6e400002-7646-4b5b-9a50-71becce51558"
 #define BLE_CHARACTERISTIC_UUID_TX "6e400003-7646-4b5b-9a50-71becce51558"
+#define BLE_CHARACTERISTIC_UUID_ST "6e400004-7646-4b5b-9a50-71becce51558"
 
 #define BLE_RING_BUF_SIZE 3
 
@@ -100,8 +106,9 @@ void ble_init();
 #include "node.h"
 #include "ed25519.h"
 
-char lora_line[80];
-char gps_line[80];
+// char lora_line[80];
+char time_line[80];
+char loc_line[80];
 char goset_line[80];
 char refresh = 1;
 
@@ -110,42 +117,70 @@ int old_repo_sum;
 int lora_cnt = 0;
 int lora_bad_crc = 0;
 
+File lora_log;
+unsigned long int next_flush;
+
 #include "cmd.h"
 
 // ----------------------------------------------------------------------------
 void setup()
 {
   hw_setup();
-  
-  io_init();
-
-  theGOset = goset_new();
-  unsigned char h[32];
-  crypto_hash_sha256(h, (unsigned char*) GOSET_DMX_STR, strlen(GOSET_DMX_STR));
-  memcpy(goset_dmx, h, DMX_LEN);
-  arm_dmx(goset_dmx, goset_rx, NULL);
-  Serial.println(String("listening for GOset protocol on ") + to_hex(goset_dmx, 7));
-  
-  repo_load();
 
   theDisplay.setFont(ArialMT_Plain_16);
   theDisplay.drawString(0 , 0, "SSB.virt.lora.pub");
   theDisplay.setFont(ArialMT_Plain_10);
   theDisplay.drawString(0 , 18, __DATE__ " " __TIME__);
-  theDisplay.display();
-  delay(1000);
-  strcpy(lora_line, "?");
-  strcpy(goset_line, "?");
+  int f = LORA_BAND / 10000;
+  char fr[30];
+  sprintf(fr, "%d.%02d MHz", f/100, f%100);
+  theDisplay.setFont(ArialMT_Plain_24);
+  theDisplay.drawString(0, 38, fr);
 
-  Serial.println("\nFile system: " + String(MyFS.totalBytes(), DEC) + " total bytes, "
-                                 + String(MyFS.usedBytes(), DEC) + " used");
+  theDisplay.display();
+  
+  io_init();
+
+  Serial.printf("File system: %d total bytes, %d used\n",
+                MyFS.totalBytes(), MyFS.usedBytes());
   MyFS.mkdir(FEED_DIR);
   listDir(MyFS, FEED_DIR, 0);
   // ftpSrv.begin(".",".");
+
+  Serial.println();
+  theGOset = goset_new();
+  unsigned char h[32];
+  crypto_hash_sha256(h, (unsigned char*) GOSET_DMX_STR, strlen(GOSET_DMX_STR));
+  memcpy(goset_dmx, h, DMX_LEN);
+  arm_dmx(goset_dmx, goset_rx, NULL);
+  Serial.printf("listening for GOset protocol on %s\n", to_hex(goset_dmx, 7));
   
-  delay(2000);
-  Serial.println("init done, starting loop now. Type '?' for list of commands\n");
+  repo_load();
+
+  // strcpy(lora_line, "?");
+  strcpy(time_line, "?");
+  strcpy(loc_line, "?");
+  strcpy(goset_line, "?");
+
+#if defined(LORA_LOG)
+  lora_log = MyFS.open(LORA_LOG_FILENAME, FILE_APPEND);
+  lora_log.printf("reboot\n");
+  lora_log.printf("millis,utc,mac,lat,lon,ele,plen,prssi,psnr,pfe,rssi\n");
+  next_flush = millis() + 10000;
+  Serial.printf("\nlength of %s: %d bytes\n", LORA_LOG_FILENAME, lora_log.size());
+#endif
+
+  Serial.printf("\nHeap: %d total, %d free, %d min, %d maxAlloc\n",
+                 ESP.getHeapSize(), ESP.getFreeHeap(),
+                 ESP.getMinFreeHeap(), ESP.getMaxAllocHeap());
+
+  Serial.println("\ninit done, starting loop now. Type '?' for list of commands\n");
+
+  delay(1500); // keep the screen for some time so the display headline can be read ..
+  OLED_toggle(); // default is OLED off, use button to switch on
 }
+
+// ----------------------------------------------------------------------
 
 int incoming(struct face_s *f, unsigned char *pkt, int len, int has_crc)
 {
@@ -163,7 +198,6 @@ int incoming(struct face_s *f, unsigned char *pkt, int len, int has_crc)
   Serial.println(String("DMX: unknown ") + to_hex(pkt, DMX_LEN));
   return -1;
 }
-
 
 void right_aligned(int cnt, char c, int y)
 {
@@ -185,11 +219,15 @@ void loop()
     wifi_clients = WiFi.softAPgetStationNum();
     refresh = 1;
   }
+  
+#if defined(MAIN_BLEDevice_H_)
   if (bleDeviceConnected != ble_clients) {
     ble_clients = bleDeviceConnected;
     refresh = 1;
   }
-  
+#endif
+
+  userButton.loop();
   io_dequeue();
   goset_tick(theGOset);
   node_tick();
@@ -205,6 +243,42 @@ void loop()
       if (pkt_len < sizeof(pkt_buf))
         pkt_buf[pkt_len++] = c;
     }
+#if defined (LORA_LOG)
+    {
+      unsigned long int m = millis();
+      long pfe = 0;
+      int rssi = 0;
+
+#if defined(WIFI_LoRa_32_V2) || defined(WIFI_LORA_32_V2)
+      lora_log.printf("%d.%03d,0000-00-00T00:00:00Z,%s,0,0,0",
+                      m/1000, m%1000,
+                      to_hex(my_mac,6,1));
+#else
+      lora_log.printf("%d.%03d,%04d-%02d-%02dT%02d:%02d:%02dZ,%s",
+                      m/1000, m%1000,
+                      gps.date.year(), gps.date.month(), gps.date.day(),
+                      gps.time.hour(), gps.time.minute(), gps.time.second(),
+                      // gps.time.centisecond(),
+                      to_hex(my_mac,6,1));
+      if (gps.location.isValid())
+        lora_log.printf(",%.8g,%.8g,%g", gps.location.lat(),
+                        gps.location.lng(), gps.altitude.meters());
+      else
+        lora_log.printf(",0,0,0");
+      pfe   = LoRa.packetFrequencyError();
+      rssi   = LoRa.rssi();
+#endif
+
+      int prssi  = LoRa.packetRssi();
+      float psnr = LoRa.packetSnr();
+
+      lora_log.printf(",%d,%d,%g,%ld,%d\n", pkt_len, prssi, psnr, pfe, rssi);
+      if (millis() > next_flush) {
+        lora_log.flush();
+        next_flush = millis() + 10000;
+      }
+    }
+#endif
     lora_cnt++;
     incoming(&lora_face, pkt_buf, pkt_len, 1);
     // sprintf(lora_line, "LoRa %d/%d: %dB, rssi=%d", lora_cnt, lora_bad_crc, pkt_len, LoRa.packetRssi());
@@ -225,17 +299,27 @@ void loop()
     incoming(&bt_face, bt_kiss.buf, packetSize, 1);
   }
 
+#if defined(MAIN_BLEDevice_H_)
   cp = ble_fetch_received();
   if (cp != NULL) {
     incoming(&ble_face, cp+1, *cp, 0);
   }
+#endif
 
-#if !defined(ARDUINO_WIFI_LORA_32_V2)
+#if defined(AXP_DEBUG)
   while (GPS.available())
     gps.encode(GPS.read());
   if (gps.time.second() != old_gps_sec) {
     old_gps_sec = gps.time.second();
-    sprintf(gps_line, "%02d:%02d:%02d utc", gps.time.hour(), gps.time.minute(), old_gps_sec);
+    sprintf(time_line, "%02d:%02d:%02d utc", gps.time.hour(), gps.time.minute(),
+                                      old_gps_sec);
+    /*
+    if (gps.location.isValid())
+      sprintf(loc_line, "%.8g@%.8g@%g/%d", gps.location.lat(), gps.location.lng(),
+                                      gps.altitude.meters(), gps.satellites.value());
+    else
+      strcpy(loc_line, "-@-@-/-");
+    */
     refresh = 1;
   }
   if (old_goset_c != theGOset->pending_c_cnt || 
@@ -264,11 +348,16 @@ void loop()
     theDisplay.drawString(42, 0, ssid+8);
     theDisplay.setFont(ArialMT_Plain_10);
     
-    theDisplay.drawString(0, 18, gps_line);
+    theDisplay.drawString(0, 18, time_line);
     // theDisplay.drawString(0, 24, goset_line);
-    theDisplay.drawString(0, 30, "w=" + String(wifi_clients) + \
-                                 " e=" + String(ble_clients) + \
-                                 " l=" + wheel[lora_cnt % 4]);
+    char stat_line[30];
+    sprintf(stat_line, "W:%d E:%d L:%s",
+            wifi_clients, ble_clients, wheel[lora_cnt % 4]);
+    theDisplay.drawString(0, 30, stat_line);
+#if defined(MAIN_BLEDevice_H_)
+    sprintf(stat_line + strlen(stat_line)-1, "%d", lora_cnt);
+    ble_send_stats((unsigned char*) stat_line, strlen(stat_line));
+#endif
 
     theDisplay.setFont(ArialMT_Plain_16);
     right_aligned(feed_cnt,  'F', 0); 
