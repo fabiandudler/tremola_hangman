@@ -22,12 +22,15 @@ var scenarioDisplay = {
     'members': ['div:back', 'core', 'lst:members', 'div:confirm-members'],
     'settings': ['div:back', 'div:settings'],
     'kanban': ['div:qr', 'core', 'lst:kanban', 'div:footer', 'plus'],
-    'board': ['div:back', 'core', 'div:board']
+    'board': ['div:back', 'core', 'div:board'],
+
+    'hangman': ['core', 'div:back', 'div:textarea']
 }
 
 var scenarioMenu = {
     'chats': [['New conversation', 'menu_new_conversation'],
         ['Connected Devices', 'menu_connection'],
+        ['Play Hangman', 'menu_hangman'],
         ['Settings', 'menu_settings'],
         ['About', 'menu_about']],
     'contacts': [['New contact', 'menu_new_contact'],
@@ -75,7 +78,9 @@ var scenarioMenu = {
         ['Reload', 'reload_curr_board'],
         ['Leave', 'leave_curr_board'],
         ['(un)Forget', 'board_toggle_forget'],
-        ['Debug', 'ui_debug']]
+        ['Debug', 'ui_debug']],
+
+    'hangman': [['New Game', 'start_new_game']]
 }
 
 function onBackPressed() {
@@ -197,6 +202,11 @@ function menu_settings() {
     var c = document.getElementById("conversationTitle");
     c.style.display = null;
     c.innerHTML = "<div style='text-align: center;'><font size=+1><strong>Settings</strong></font></div>";
+}
+
+function menu_hangman() {
+    closeOverlay();
+    setScenario('hangman')
 }
 
 function closeOverlay() {
