@@ -19,12 +19,17 @@ function hangman_button_pressed() {
     document.getElementById('draft_hangman').value = "";
 
     console.log('Typed text:', typedText);
+    change_known_word(typedText) //TODO remove later when Benny
 
     //CHECK IF ONLY ONE LETTER
     //  EITHER POST CHALLENGE
     //  EITHER COMPARE LETTERS
     //guessLetter(typedText);
 
+}
+
+function change_known_word(word) {
+    document.getElementById('span:text').textContent = word
 }
 
 /*function Hangman(word) {

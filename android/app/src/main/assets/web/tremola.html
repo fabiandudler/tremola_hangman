@@ -384,10 +384,18 @@
   </table>
 
   <!-- OUR OWN TEXTAREA THAT INVOKES OUR FUNCTION (hangman.js) -->
-  <table id="div:textarea_hangman" class="neutral" style="height: 56px; width: calc(100% - 6pt); display: none; border: 3px inset #ebf4fa /*var(--light)*/; margin: 3pt;" width=100%>
-      <tr><td width=95%><textarea id='draft_hangman' rows=3 placeholder='Please, guess a letter!'></textarea>
-      <td width=5% height=100%><button id='btn:send_' class="flat passive buttontext" onclick="hangman_button_pressed();" style="background-image: url('img/send-button.svg'); width: 50px; height: 50px; margin-bottom: 4px;">&nbsp;<!-- font size=+2>&#x1F440;</font><br><font size=small>Preview</font --></button>
+  <table id="div:textarea_hangman" class="neutral" style="width: 100%; display: none; border: 3px inset #ebf4fa; margin: 3pt;">
+    <tr>
+      <td>
+        <span id="span:text" class="text-span">CURRENT WORD IS EMPTY</span>
+        <textarea id="draft_hangman" rows="1" placeholder="Please, guess a letter!"></textarea>
+      </td>
+      <td style="width: 5%; vertical-align: top;">
+        <button id="btn:send_" class="flat passive buttontext" onclick="hangman_button_pressed();" style="background-image: url('img/send-button.svg'); width: 50px; height: 50px; margin-bottom: 4px;">&nbsp;</button>
+      </td>
+    </tr>
   </table>
+
 
   <div id='div:confirm-members' class=neutral style="height: 36px; align-content: center; border: 3px inset #ebf4fa /*var(--light)*/; border-radius: 2pt; margin: 3px; margin-top: 20px; display: none; flex-direction: row; justify-content: center; align-items: center;">
     <!-- button class="flat passive buttontext" style="background-image: url('img/cancel.svg'); width: 50%; height: 50px; margin: 5px;" onclick="onBackPressed();">&nbsp;</--button -->
