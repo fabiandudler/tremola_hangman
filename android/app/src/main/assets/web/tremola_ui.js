@@ -8,7 +8,7 @@ var display_or_not = [
     'div:qr', 'div:back',
     'core', 'lst:chats', 'lst:posts', 'lst:contacts', 'lst:members', 'the:connex',
     'lst:kanban', 'div:footer', 'div:textarea', 'div:confirm-members', 'plus',
-    'div:settings', 'div:board', 'hangman_image'
+    'div:settings', 'div:board', 'hangman_image', 'div:textarea_hangman'
 ];
 
 var prev_scenario = 'chats';
@@ -24,7 +24,7 @@ var scenarioDisplay = {
     'kanban': ['div:qr', 'core', 'lst:kanban', 'div:footer', 'plus'],
     'board': ['div:back', 'core', 'div:board'],
 
-    'hangman': ['core', 'div:back', 'div:textarea', 'hangman_image']
+    'hangman': ['core', 'div:back', 'div:textarea_hangman', 'hangman_image']
 }
 
 var scenarioMenu = {
@@ -83,7 +83,6 @@ var scenarioMenu = {
     'hangman': [['New Game', 'start_new_game'],
         ['Change Picture', 'change_picture']]
 }
-
 
 function onBackPressed() {
     if (overlayIsActive) {

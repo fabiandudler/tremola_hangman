@@ -7,7 +7,24 @@ function start_new_game() {
 function change_picture() {
     //closeOverlay();
     console.log('change picture');
-    document.getElementById('hangman_image').src = 'img/hangmanTest2.png';
+    var img = document.getElementById("hangman_image");
+      console.log(img); // Check if the element is correctly selected
+      img.src = "img/hangmanTest2.png";
+}
+
+function hangman_button_pressed() {
+    console.log("buttontontotn");
+
+    var typedText = document.getElementById('draft_hangman').value;
+    document.getElementById('draft_hangman').value = "";
+
+    console.log('Typed text:', typedText);
+
+    //CHECK IF ONLY ONE LETTER
+    //  EITHER POST CHALLENGE
+    //  EITHER COMPARE LETTERS
+    //guessLetter(typedText);
+
 }
 
 /*function Hangman(word) {
