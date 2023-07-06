@@ -23,25 +23,23 @@ function hangman_button_pressed() {
     document.getElementById('draft_hangman').value = "";
 
     console.log('Typed text:', typedText);
-    change_known_word(typedText) //TODO remove later when Benny
-    let inputWord = typedText.toString();
-    //CHECK IF ONLY ONE LETTER
-    //  EITHER POST CHALLENGE
-    //  EITHER COMPARE LETTERS
-    //guessLetter(typedText);
+    let userInput = typedText.toString();
 
-    // check if input := word (more than one letter) -> set as new input word --> save somewhere.??
-    // check if input := letter
+    // check if input := word (more than one letter) --> inputWordGame
+    // check if input := letter --> user guess
 
-    if (inputWord.length == 1) {
-        console.log('Guess letter:', inputWord);
-        guessLetter(inputWord);
+    if (userInput.length == 1) {
+        console.log('Guess letter:', userInput);
+        guessLetter(userInput);
     } else {
-        console.log('Set new input word:', inputWord);
-        inputWordGame = inputWord;
-        let charArray = new Array(inputWord.length).fill('_');
+        console.log('Set new input word:', userInput);
+        inputWordGame = userInput;
+
+        // Initialize Guess Array with '_' symbols
+        let charArray = new Array(userInput.length).fill('_');
         currentGuessStatus = charArray;
 
+        // Console Testing
         for (let i = 0; i < currentGuessStatus.length; i++) {
                 console.log(currentGuessStatus[i]);
         }
@@ -50,29 +48,30 @@ function hangman_button_pressed() {
 }
 
 function change_known_word(word) {
-    document.getElementById('span:text').textContent = word
+    document.getElementById('span:text').textContent = word;
 }
 
-/* parameters: letter to guess
-*/
-function guessLetter(inputWord) {
-    console.log('is', inputWord, 'in', inputWordGame);
+// parameter: letter to guess
+function guessLetter(inputLetter) {
+    console.log('is', inputLetter, 'in', inputWordGame);
     checkWord = inputWordGame.toString();
 
     let letterIsInWord = false;
 
     for(let i = 0; i < checkWord.length; i++) {
 
-        if (checkWord.charAt(i) == inputWord) {
-            currentGuessStatus[i] = inputWord;
+        if (checkWord.charAt(i) == inputLetter) {
+            currentGuessStatus[i] = inputLetter;
             letterIsInWord = true;
         }
 
     }
 
+    change_known_word(currentGuessStatus.join(' '));
+
     if (letterIsInWord != true) {
         console.log('letter is not in word:( try again!')
-        // draw part of hangman
+        // draw_part_of_hangman()
     }
 
     for (let j = 0; j < currentGuessStatus.length; j++) {
@@ -80,8 +79,6 @@ function guessLetter(inputWord) {
     }
 
 }
-
-
 
 /*function Hangman(word) {
 
