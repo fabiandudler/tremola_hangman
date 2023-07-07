@@ -10,11 +10,22 @@ function start_new_game() {
 }
 
 /*
-    Sets word to guess and resets lives
+    Saves the new chosen word to the backend and starts the game
 */
-function setupGame(word) {
+function saveWord(word) {
+    backend("hangman(word)");
+    setupGame(word);
+}
+
+
+/*
+    Sets word to guess and resets lives
+    Does not save the word in the log so that it can be called when encountering a new log
+*/
+function setupGame(word) { //-> eval("setupGame(word)")
+    backend("hangman(word)");
     let charArray = new Array(word.length).fill('_');
-    currentGuessStatus = charArray.join(' ');
+    currentGuessStatus = charArray.join('');
 
     remainingLives = 5;
     change_picture("img/hangmanLives5.png")
@@ -60,6 +71,7 @@ function change_picture(source) {
     //closeOverlay();
     console.log('Change hangman picture');
     document.getElementById("hangman_image").src = source;
+    //console.log(document.getElementById("hangman_image"));
 }
 
 function change_known_word(word) {
@@ -84,7 +96,7 @@ function hangman_button_pressed() {
     } else { // user sets new word
         console.log('Set new input word:', userInput);
         inputWordGame = userInput;
-        setupGame(userInput);
+        saveWord(userInput);
         // Console Testing
         for (let i = 0; i < currentGuessStatus.length; i++) {
                 console.log(currentGuessStatus[i]);
