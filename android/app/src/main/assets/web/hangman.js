@@ -2,10 +2,17 @@
 var inputWordGame;
 var currentGuessStatus;
 var remainingLives;
+var givenUp;
 
-function start_new_game() {
-    console.log("test");
-    console.log("test2");
+function show_solution() {
+    if(inputWordGame != null) {
+        console.log("Game is ending... showing solution");
+        currentGuessStatus = inputWordGame;
+        change_known_word(currentGuessStatus);
+        givenUp = true;
+    } else {
+        console.log("There is no game running")
+    }
     closeOverlay();
 }
 
@@ -25,6 +32,12 @@ function saveWord(word) {
     setupGame(word);
 }
 
+/*
+    1. val encodedWord = Bipf.encode(word) (WebAppInterface.kt)
+    2. act.tinyNode.publish_public_content(encodedWord) (WebInterface.kt)
+    3.      val pkt = repo.mk_contentLogEntry(content) (tssb/Node.kt) -> ByteArray?
+    4.      return repo.feed_append(context.idStore.identify.verifyKey, pkt)
+*/
 
 /*
     Sets word to guess and resets lives
@@ -35,8 +48,9 @@ function setupGame(word) { //-> eval("setupGame(word)")
     currentGuessStatus = charArray.join('');
 
     remainingLives = 5;
-    change_picture("img/hangmanLives5.png")
-    change_known_word(currentGuessStatus)
+    givenUp = false;
+    change_picture("img/hangmanLives5.png");
+    change_known_word(currentGuessStatus);
 }
 
 /**
@@ -44,7 +58,7 @@ function setupGame(word) { //-> eval("setupGame(word)")
     False otherwise
 */
 function gameEnd() {
-    if (remainingLives <= 0 || currentGuessStatus == null || !currentGuessStatus.includes('_')) {
+    if (remainingLives <= 0 || currentGuessStatus == null || currentGuessStatus == inputWordGame) {
         return true;
     } else {
         return false;
@@ -140,6 +154,7 @@ function guessLetter(inputLetter) {
             }
         }
         change_known_word(currentGuessStatus);
+        gameEndAction();
 
         if (letterIsInWord != true) {
             console.log('Letter is not in word:( try again!')
@@ -150,11 +165,35 @@ function guessLetter(inputLetter) {
             console.log(currentGuessStatus[j]);
         }
     } else { //gameEnd returns true
-        //there is no game running
-        console.log("There is no game running")
+        gameEndAction();
     }
     persist();
 }
 
+function gameEndAction() {
+    if(remainingLives <= 0) {
+        gameLost();
+    } else if(!givenUp && currentGuessStatus == inputWordGame) {
+        gameWon();
+    }
+}
 
+function gameWon() {
+    console.log("Game won!");
+    change_known_word("You have found the word: " + inputWordGame + " with " + remainingLives + " lives remaining, congrats!")
+    //change_picture("img/hangmanWon.png");
+}
+
+function gameLost() {
+    console.log("Game lost...");
+    change_known_word("You have not found the word: " + inputWordGame + ", unlucky...")
+    //picture is already changed to hangmanLives0.png
+}
+
+//lives:
+    //1. placing chair
+    //2. sitting
+    //3. drink exists
+    //4. raise glass
+    //5. spill  --> won game --> happy
 

@@ -80,7 +80,7 @@ var scenarioMenu = {
         ['(un)Forget', 'board_toggle_forget'],
         ['Debug', 'ui_debug']],
 
-    'hangman': [['New Game', 'start_new_game'],
+    'hangman': [['End Game', 'show_solution'],
         ['Change Picture', 'change_picture']]
 }
 
