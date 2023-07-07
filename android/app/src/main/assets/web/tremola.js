@@ -937,6 +937,9 @@ function b2f_new_event(e) { // incoming SSB log event: we get map with three ent
         } else if (e.public[0] == "KAN") { // Kanban board event
             console.log("New kanban event")
             kanban_new_event(e)
+        } else if (e.public[0] == "HAM") {
+            console.log("New Hang event")
+            hangman_new_event(e) //
         }
 
         persist();

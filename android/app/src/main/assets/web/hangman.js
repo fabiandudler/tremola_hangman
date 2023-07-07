@@ -9,11 +9,19 @@ function start_new_game() {
     closeOverlay();
 }
 
+function hangman_new_event(e) {
+
+    var word = e.public[1];
+    console.log("hangman_new_event", word)
+    setupGame(word);
+
+}
+
 /*
     Saves the new chosen word to the backend and starts the game
 */
 function saveWord(word) {
-    backend("hangman(word)");
+    backend("hangman " +  word);
     setupGame(word);
 }
 
@@ -23,7 +31,6 @@ function saveWord(word) {
     Does not save the word in the log so that it can be called when encountering a new log
 */
 function setupGame(word) { //-> eval("setupGame(word)")
-    backend("hangman(word)");
     let charArray = new Array(word.length).fill('_');
     currentGuessStatus = charArray.join('');
 
@@ -49,18 +56,23 @@ function gameEnd() {
 */
 function wrongGuess() {
     remainingLives--
+
+    var show_image = document.getElementById('hangman_image')
     //change picture to hangman representing remaining lives
     if (remainingLives == 4) {
-        change_picture("img/hangmanLives4");
+        change_picture("img/hangmanLives4.png");
+        console.log('4 lives')
     } else if (remainingLives == 3) {
-        change_picture("img/hangmanLives3");
+        change_picture("img/hangmanLives3.png");
+        console.log('3 lives')
     } else if (remainingLives == 2) {
-        change_picture("img/hangmanLives2");
+        change_picture("img/hangmanLives2.png");
     } else if (remainingLives == 1) {
-        change_picture("img/hangmanLives1");
+        change_picture("img/hangmanLives1.png");
     } else if (remainingLives == 0) {
-        change_picture("img/hangmanLives0");
+        change_picture("img/hangmanLives0.png");
     }
+    persist();
 }
 
 /*
@@ -71,11 +83,11 @@ function change_picture(source) {
     //closeOverlay();
     console.log('Change hangman picture');
     document.getElementById("hangman_image").src = source;
-    //console.log(document.getElementById("hangman_image"));
 }
 
 function change_known_word(word) {
     document.getElementById('span:text').textContent = word;
+    persist();
 }
 
 function hangman_button_pressed() {
@@ -85,6 +97,7 @@ function hangman_button_pressed() {
     document.getElementById('draft_hangman').value = "";
     console.log('Typed text:', typedText);
     let userInput = typedText.toString();
+    persist();
 
     // check if input := word (more than one letter) --> inputWordGame
     // check if input := letter --> user guess
@@ -140,6 +153,7 @@ function guessLetter(inputLetter) {
         //there is no game running
         console.log("There is no game running")
     }
+    persist();
 }
 
 

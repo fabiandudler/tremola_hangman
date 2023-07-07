@@ -17,6 +17,7 @@ import org.json.JSONObject
 import nz.scuttlebutt.tremolavossbol.tssb.LogTinyEntry
 import nz.scuttlebutt.tremolavossbol.utils.Bipf
 import nz.scuttlebutt.tremolavossbol.utils.Bipf.Companion.BIPF_LIST
+import nz.scuttlebutt.tremolavossbol.utils.Constants.Companion.TINYSSB_APP_HANGMAN
 import nz.scuttlebutt.tremolavossbol.utils.Constants.Companion.TINYSSB_APP_TEXTANDVOICE
 import nz.scuttlebutt.tremolavossbol.utils.Constants.Companion.TINYSSB_APP_KANBAN
 import nz.scuttlebutt.tremolavossbol.utils.HelperFunctions.Companion.toBase64
@@ -172,6 +173,31 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
                  */
                 return
             }
+            "hangman" -> {
+
+                Log.d("HangmanAnything", args[1])
+
+                val word: String? = if(args[1] != "null") args[1] else null
+                println(word)
+
+                if (word != null) {
+                    Log.d("HangmanWord", word)
+                }
+
+                val lst = Bipf.mkList()
+                Log.d("listcheck", lst.toString())
+                Bipf.list_append(lst, TINYSSB_APP_HANGMAN)
+                if (word != null)
+                    Bipf.list_append(lst, Bipf.mkString(word))
+                else
+                    Bipf.list_append(lst, Bipf.mkString("null")) // Bipf.mkNone()
+
+                val encodedList = Bipf.encode(lst)
+                if (encodedList != null) {
+                    act.tinyNode.publish_public_content(encodedList)
+                }
+
+            }
             "kanban" -> { // kanban bid atob(prev) atob(operation) atob(arg1) atob(arg2) atob(...)
                 /*var bid: String = args[1]
                 var prevs: List<String>? = null
@@ -229,6 +255,10 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
             Log.d("wai", "post_voice v- ${voice}/${voice.size}")
         val lst = Bipf.mkList()
         Bipf.list_append(lst, TINYSSB_APP_TEXTANDVOICE)
+        println(TINYSSB_APP_TEXTANDVOICE) // check
+        println("weffee")
+        println(lst)
+
         // add tips
         Bipf.list_append(lst, if (text == null) Bipf.mkNone() else Bipf.mkString(text))
         Bipf.list_append(lst, if (voice == null) Bipf.mkNone() else Bipf.mkBytes(voice))
