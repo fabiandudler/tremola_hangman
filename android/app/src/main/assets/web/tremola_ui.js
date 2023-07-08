@@ -80,8 +80,7 @@ var scenarioMenu = {
         ['(un)Forget', 'board_toggle_forget'],
         ['Debug', 'ui_debug']],
 
-    'hangman': [['End Game', 'show_solution'],
-        ['Change Picture', 'change_picture']]
+    'hangman': [['End Game', 'show_solution']]
 }
 
 function onBackPressed() {

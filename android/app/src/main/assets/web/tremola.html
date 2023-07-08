@@ -82,8 +82,15 @@
     <button class=float_button onclick="plus_button();">+</button>
   </div>
 
+  <style>
+  #hangman_image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
   <div id="hangman_image">
-    <img src="img/default.png" alt="Hangman main picture" style="width: 80%; height: auto;">
+    <img src="img/default.png" alt="Hangman main picture" style="width: auto; height: 50vh; display: flex; justify-content: center; align-items: center";>
   </div>
 
   <div id='overlay-bg' class='overlay-bg' onclick="closeOverlay();">
@@ -388,7 +395,7 @@
     <tr>
       <td>
         <span id="span:text" class="text-span">CURRENT WORD IS EMPTY</span>
-        <textarea id="draft_hangman" rows="1" placeholder="Please, guess a letter!"></textarea>
+        <textarea id="draft_hangman" rows="1" placeholder="Post a word / guess a letter!"></textarea>
       </td>
       <td style="width: 5%; vertical-align: top;">
         <button id="btn:send_" class="flat passive buttontext" onclick="hangman_button_pressed();" style="background-image: url('img/send-button.svg'); width: 50px; height: 50px; margin-bottom: 4px;">&nbsp;</button>

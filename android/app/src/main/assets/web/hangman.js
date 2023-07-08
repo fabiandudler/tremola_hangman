@@ -46,7 +46,8 @@ function saveWord(word) {
     Sets word to guess and resets lives
     Does not save the word in the log so that it can be called when encountering a new log
 */
-function setupGame(word) { //-> eval("setupGame(word)")
+function setupGame(incoming) { //-> eval("setupGame(word)")
+    let word = incoming.toUpperCase()
     console.log("setupGame:", word)
     let charArray = new Array(word.length).fill('_');
     currentGuessStatus = charArray.join('');
@@ -135,7 +136,7 @@ function hangman_button_pressed() {
     var typedText = document.getElementById('draft_hangman').value;
     document.getElementById('draft_hangman').value = "";
     console.log('Typed text:', typedText);
-    let userInput = typedText.toString();
+    let userInput = typedText.toString().toUpperCase();
     persist();
 
     // check if input := word (more than one letter) --> inputWordGame
@@ -179,12 +180,13 @@ function guessLetter(inputLetter) {
             }
         }
         change_known_word(currentGuessStatus);
-        gameEndAction();
 
         if (letterIsInWord != true) {
             console.log('Letter is not in word:( try again!')
             wrongGuess();
         }
+
+        gameEndAction();
 
         for (let j = 0; j < currentGuessStatus.length; j++) {
             console.log(currentGuessStatus[j]);
@@ -205,7 +207,7 @@ function gameEndAction() {
 
 function gameWon() {
     console.log("Game won!");
-    change_known_word("You have found the word: " + inputWordGame + " with " + remainingLives + " lives remaining, congrats!")
+    change_known_word("Solution: " + inputWordGame + " with " + remainingLives + " lives remaining!")
     change_picture("img/hangmanWon.png");
 }
 
@@ -221,4 +223,15 @@ function gameLost() {
     //3. drink exists
     //4. raise glass
     //5. spill  --> won game --> happy
+
+//Sat 8.7.
+   //5 lives:       nothing
+   //4 lives:       chair
+   //3 lives:       chilling
+   //2 lives:       present drink
+   //1 life:        raise glass
+   //0 lives:       splash
+
+   //Win:           Happy, sparkles, thumbs up
+
 
