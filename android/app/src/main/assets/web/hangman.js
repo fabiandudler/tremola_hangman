@@ -1,4 +1,3 @@
-//let str inputWordGame;
 var inputWordGame;
 var currentGuessStatus;
 var remainingLives;
@@ -16,6 +15,9 @@ function show_solution() {
     closeOverlay();
 }
 
+/*
+    Called by 'tremola.js' function 'b2f_new_event(e)'
+ */
 function hangman_new_event(e) {
 
     var word = e.public[1];
@@ -28,6 +30,7 @@ function hangman_new_event(e) {
     Saves the new chosen word to the backend and starts the game
 */
 function saveWord(word) {
+    console.log("save Word:", word)
     backend("hangman " +  word);
     setupGame(word);
 }
@@ -44,12 +47,13 @@ function saveWord(word) {
     Does not save the word in the log so that it can be called when encountering a new log
 */
 function setupGame(word) { //-> eval("setupGame(word)")
+    console.log("setupGame:", word)
     let charArray = new Array(word.length).fill('_');
     currentGuessStatus = charArray.join('');
 
     remainingLives = 5;
     givenUp = false;
-    change_picture("img/hangmanLives5.png");
+    change_picture("img/default.png"); // hangmanLives5
     change_known_word(currentGuessStatus);
 }
 
@@ -94,9 +98,30 @@ function wrongGuess() {
     Example: change_picture("img/hangmanLives5.png")
 */
 function change_picture(source) {
-    //closeOverlay();
-    console.log('Change hangman picture');
-    document.getElementById("hangman_image").src = source;
+    // console.log('hangman_image.src NOW:   ', document.getElementById('hangman_image').src)
+    // --> CANNOT REFERENCE hangman_image.src DIRECTLY.
+    // --> INSTANCE OF hangman_image MUST BE CALLED BY ITS 'ID' AND THEN THE SPECIFIC ELEMENT REFERENCED WE WANT TO MANIPULATE
+
+    // console.log('UPDATE IMAGE TO:', source);
+
+    // CREATE INSTANCE OF hangman_image
+    // GET "img" ATTRIBUTE FROM "hangman-image" TO DIRECTLY MANIPULATE IT!
+    var hangmanImage = document.getElementById("hangman_image"); // SELECT hangman_image ELEMENT: <div id="hangman_image" ... </div>
+    console.log('OBJECT OF hangmanImage:', hangmanImage);
+    var imageElement = hangmanImage.getElementsByTagName("img")[0]; // SELECT ELEMENT IT IS ACCESSING: // <img src= "..." alt="..." ..>
+    console.log('GET ELEMENT WITH "img" TAG --> imageElement:', imageElement);
+
+    // SOURCE AND ALT ATTRIBUTES OF OLD IMAGE
+    console.log('CURRENT PICTURE (alt):  ', imageElement.alt);
+    // console.log('NOW: SOURCE', imageElement.src);
+
+    // UPDATE SOURCE AND ALT ATTRIBUTES OF IMAGE
+    imageElement.src = source;                       // PATH TO IMAGE (IS PARAMETER OF FUNCTION)
+    imageElement.alt = "Hangman Picture: " + source; // NAME OF IMAGE
+    console.log('UPDATE PICTURE TO (alt):', imageElement.alt);
+    // console.log('UPDATE: SOURCE:', imageElement.src);
+
+
 }
 
 function change_known_word(word) {
@@ -181,7 +206,7 @@ function gameEndAction() {
 function gameWon() {
     console.log("Game won!");
     change_known_word("You have found the word: " + inputWordGame + " with " + remainingLives + " lives remaining, congrats!")
-    //change_picture("img/hangmanWon.png");
+    change_picture("img/hangmanWon.png");
 }
 
 function gameLost() {
