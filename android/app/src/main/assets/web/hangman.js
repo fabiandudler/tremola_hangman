@@ -50,7 +50,9 @@ function saveWord(word) {
     Does not save the word in the log so that it can be called when encountering a new log
 */
 function setupGame(incoming) { //-> eval("setupGame(word)")
-    if (gameEnd) {
+
+
+    if (gameEnd()) {
         // when encountering a new game -> game is not overwritten
             // -> 2 friend sitting beside each other posting word for the other
             //      1 sets word -> both have word
@@ -80,11 +82,10 @@ function setupGame(incoming) { //-> eval("setupGame(word)")
     False otherwise
 */
 function gameEnd() {
-    if (currentGuessStatus == null || remainingLives <= 0 || currentGuessStatus == inputWordGame) {
-        return true;
-    } else {
-        return false;
-    }
+    console.log("currentGuessStatus:", currentGuessStatus);
+    console.log("remainingLives:", remainingLives);
+    console.log("currentGuessStatus == inputWordGame?", currentGuessStatus == inputWordGame);
+    return (currentGuessStatus == null || remainingLives <= 0 || currentGuessStatus == inputWordGame);
 }
 
 /*
