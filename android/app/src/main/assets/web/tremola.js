@@ -787,9 +787,11 @@ function resetTremola() { // wipes browser-side content
         "profile": {},
         "id": myId,
         "settings": get_default_settings(),
-        "board": {}
+        "board": {},
+        "storedGame": {} //get_stored_game()
     }
     var n = recps2nm([myId])
+    console.log("Variable n in tremola", n)
     tremola.chats[n] = {
         "alias": "local notes (for my eyes only)", "posts": {}, "forgotten": false,
         "members": [myId], "touched": Date.now(), "lastRead": 0,
@@ -799,6 +801,10 @@ function resetTremola() { // wipes browser-side content
         "alias": "Public channel", "posts": {},
         "members": ["ALL"], "touched": Date.now(), "lastRead": 0,
         "timeline": new Timeline()
+    };
+    // Last InputWord saved as stored Game
+    tremola.storedGame = {
+        "storedWord": {}
     };
     tremola.contacts[myId] = {"alias": "me", "initial": "M", "color": "#bd7578", "forgotten": false};
     createBoard('Personal Board', [FLAG.PERSONAL])
@@ -938,7 +944,7 @@ function b2f_new_event(e) { // incoming SSB log event: we get map with three ent
             console.log("New kanban event")
             kanban_new_event(e)
         } else if (e.public[0] == "HAM") {
-            console.log("New Hang event")
+            console.log("New Hangman event")
             hangman_new_event(e) //
         }
 
@@ -999,10 +1005,20 @@ function b2f_initialize(id) {
     load_chat_list()
     load_contact_list()
     load_board_list()
+    load_hangman_word()
 
     closeOverlay();
     setScenario('chats');
     // load_chat("ALL");
+}
+
+function load_hangman_word(){
+    console.log("Loaded 0: " + tremola.storedGame)
+    if (tremola.storedGame[0] != "" && tremola.storedGame[0] != null) {
+            console.log("Loaded 1: " + tremola.storedGame)
+            setupGame(tremola.storedGame)
+        }
+
 }
 
 // --- eof

@@ -16,12 +16,15 @@ function show_solution() {
 }
 
 /*
-    Called by 'tremola.js' function 'b2f_new_event(e)'
+    Called by 'tremola.js' function 'b2f_new_event(e)':
+    e.public[0] == 'HAM' -> hangman_new_event(e)
  */
 function hangman_new_event(e) {
 
     var word = e.public[1];
-    console.log("hangman_new_event", word)
+    console.log("hangman_new_event", word);
+
+    // save word in tremola variable.
     setupGame(word);
 
 }
@@ -51,11 +54,16 @@ function setupGame(incoming) { //-> eval("setupGame(word)")
     console.log("setupGame:", word)
     let charArray = new Array(word.length).fill('_');
     currentGuessStatus = charArray.join('');
+    inputWordGame = incoming;
 
     remainingLives = 5;
     givenUp = false;
     change_picture("img/default.png"); // hangmanLives5
     change_known_word(currentGuessStatus);
+
+    tremola.storedGame = word;
+    console.log("tremola.savedGame:",tremola.storedGame);
+    persist();
 }
 
 /**
@@ -86,12 +94,14 @@ function wrongGuess() {
         console.log('3 lives')
     } else if (remainingLives == 2) {
         change_picture("img/hangmanLives2.png");
+        console.log('2 lives')
     } else if (remainingLives == 1) {
         change_picture("img/hangmanLives1.png");
+        console.log('1 lives')
     } else if (remainingLives == 0) {
         change_picture("img/hangmanLives0.png");
+        console.log('0 lives')
     }
-    persist();
 }
 
 /*
@@ -127,7 +137,6 @@ function change_picture(source) {
 
 function change_known_word(word) {
     document.getElementById('span:text').textContent = word;
-    persist();
 }
 
 function hangman_button_pressed() {
@@ -137,7 +146,6 @@ function hangman_button_pressed() {
     document.getElementById('draft_hangman').value = "";
     console.log('Typed text:', typedText);
     let userInput = typedText.toString().toUpperCase();
-    persist();
 
     // check if input := word (more than one letter) --> inputWordGame
     // check if input := letter --> user guess
@@ -148,8 +156,7 @@ function hangman_button_pressed() {
         guessLetter(userInput);
     } else { // user sets new word
         console.log('Set new input word:', userInput);
-        inputWordGame = userInput;
-        saveWord(userInput);
+        saveWord(userInput.toUpperCase());
         // Console Testing
         for (let i = 0; i < currentGuessStatus.length; i++) {
                 console.log(currentGuessStatus[i]);
@@ -194,7 +201,6 @@ function guessLetter(inputLetter) {
     } else { //gameEnd returns true
         gameEndAction();
     }
-    persist();
 }
 
 function gameEndAction() {

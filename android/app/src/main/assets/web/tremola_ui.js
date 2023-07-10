@@ -23,8 +23,7 @@ var scenarioDisplay = {
     'settings': ['div:back', 'div:settings'],
     'kanban': ['div:qr', 'core', 'lst:kanban', 'div:footer', 'plus'],
     'board': ['div:back', 'core', 'div:board'],
-
-    'hangman': ['core', 'div:back', 'div:textarea_hangman', 'hangman_image']
+    'hangman': ['div:back','core', 'div:textarea_hangman', 'hangman_image']
 }
 
 var scenarioMenu = {
@@ -107,7 +106,7 @@ function onBackPressed() {
 
 function setScenario(s) {
     // console.log('setScenario ' + s)
-    var lst = scenarioDisplay[s];
+    var lst = scenarioDisplay[s]; //
     if (lst) {
         // if (s != 'posts' && curr_scenario != "members" && curr_scenario != 'posts') {
         if (['chats', 'contacts', 'connex', 'kanban'].indexOf(curr_scenario) >= 0) {
@@ -206,7 +205,9 @@ function menu_settings() {
 
 function menu_hangman() {
     closeOverlay();
+    prev_scenario = 'chats';
     setScenario('hangman')
+    // closeOverlay();
 }
 
 function closeOverlay() {
@@ -237,6 +238,9 @@ function closeOverlay() {
     document.getElementById('btn:item_menu_description_cancel').style.display = 'none'
     document.getElementById('div:debug').style.display = 'none'
     document.getElementById("div:invite_menu").style.display = 'none'
+
+    // hangman overlays
+    // document.getElementById('hangman_image').style.display = 'none';
 
     overlayIsActive = false;
 

@@ -175,23 +175,24 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
             }
             "hangman" -> {
 
-                Log.d("HangmanAnything", args[1])
-
-                val word: String? = if(args[1] != "null") args[1] else null
-                println(word)
-
+                val word: String? = if(args[1] != "null") args[1] else null // args[1] == inputWord of Game
                 if (word != null) {
-                    Log.d("HangmanWord", word)
+                    // eval(word);
+                    // Log.d("eval(word)", eval(word).toString());
+                    Log.d("HangmanInputWord", word)
                 }
 
                 val lst = Bipf.mkList()
                 Log.d("listcheck", lst.toString())
                 Bipf.list_append(lst, TINYSSB_APP_HANGMAN)
+                Log.d("Append lst to TINYSSB_APP_HANGMAN: (lst.toSting()) --> ", lst.toString())
+                Log.d("gam", "gameplay")
                 if (word != null)
                     Bipf.list_append(lst, Bipf.mkString(word))
                 else
                     Bipf.list_append(lst, Bipf.mkString("null")) // Bipf.mkNone()
 
+                Log.d("IFF inputWord is not empty append word to lst: (lst.toString()) -->", lst.toString())
                 val encodedList = Bipf.encode(lst)
                 if (encodedList != null) {
                     act.tinyNode.publish_public_content(encodedList)
@@ -255,9 +256,8 @@ class WebAppInterface(val act: MainActivity, val webView: WebView) {
             Log.d("wai", "post_voice v- ${voice}/${voice.size}")
         val lst = Bipf.mkList()
         Bipf.list_append(lst, TINYSSB_APP_TEXTANDVOICE)
-        println(TINYSSB_APP_TEXTANDVOICE) // check
-        println("weffee")
-        println(lst)
+        println("TINYSSP_APP_TEX_ANDVOICE: " + TINYSSB_APP_TEXTANDVOICE) // check
+        println("lst: " + lst)
 
         // add tips
         Bipf.list_append(lst, if (text == null) Bipf.mkNone() else Bipf.mkString(text))
