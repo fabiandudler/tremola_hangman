@@ -50,20 +50,29 @@ function saveWord(word) {
     Does not save the word in the log so that it can be called when encountering a new log
 */
 function setupGame(incoming) { //-> eval("setupGame(word)")
-    let word = incoming.toUpperCase()
-    console.log("setupGame:", word)
-    let charArray = new Array(word.length).fill('_');
-    currentGuessStatus = charArray.join('');
-    inputWordGame = incoming;
+    if (gameEnd) {
+        // when encountering a new game -> game is not overwritten
+            // -> 2 friend sitting beside each other posting word for the other
+            //      1 sets word -> both have word
+            //      1 ends his game
+            //      2 sets word -> sends word but does not overwrite running -> 1 receives word
+            //      both can play?
 
-    remainingLives = 5;
-    givenUp = false;
-    change_picture("img/default.png"); // hangmanLives5
-    change_known_word(currentGuessStatus);
+        let word = incoming.toUpperCase()
+        console.log("setupGame:", word)
+        let charArray = new Array(word.length).fill('_');
+        currentGuessStatus = charArray.join('');
+        inputWordGame = incoming;
 
-    tremola.storedGame = word;
-    console.log("tremola.savedGame:",tremola.storedGame);
-    persist();
+        remainingLives = 5;
+        givenUp = false;
+        change_picture("img/default.png"); // hangmanLives5
+        change_known_word(currentGuessStatus);
+
+        tremola.storedGame = word;
+        console.log("tremola.savedGame:",tremola.storedGame);
+        persist();
+    }
 }
 
 /**
@@ -71,7 +80,7 @@ function setupGame(incoming) { //-> eval("setupGame(word)")
     False otherwise
 */
 function gameEnd() {
-    if (remainingLives <= 0 || currentGuessStatus == null || currentGuessStatus == inputWordGame) {
+    if (currentGuessStatus == null || remainingLives <= 0 || currentGuessStatus == inputWordGame) {
         return true;
     } else {
         return false;
@@ -157,10 +166,6 @@ function hangman_button_pressed() {
     } else { // user sets new word
         console.log('Set new input word:', userInput);
         saveWord(userInput.toUpperCase());
-        // Console Testing
-        for (let i = 0; i < currentGuessStatus.length; i++) {
-                console.log(currentGuessStatus[i]);
-        }
     }
 
 }

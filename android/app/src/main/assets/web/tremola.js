@@ -802,10 +802,8 @@ function resetTremola() { // wipes browser-side content
         "members": ["ALL"], "touched": Date.now(), "lastRead": 0,
         "timeline": new Timeline()
     };
-    // Last InputWord saved as stored Game
-    tremola.storedGame = {
-        "storedWord": {}
-    };
+    tremola.storedGame = "";
+
     tremola.contacts[myId] = {"alias": "me", "initial": "M", "color": "#bd7578", "forgotten": false};
     createBoard('Personal Board', [FLAG.PERSONAL])
     persist();
@@ -1014,7 +1012,7 @@ function b2f_initialize(id) {
 
 function load_hangman_word(){
     console.log("Loaded 0: " + tremola.storedGame)
-    if (tremola.storedGame[0] != "" && tremola.storedGame[0] != null) {
+    if (tremola.storedGame != "" && tremola.storedGame != null) {
             console.log("Loaded 1: " + tremola.storedGame)
             setupGame(tremola.storedGame)
         }
