@@ -8,6 +8,8 @@ function show_solution() {
         console.log("Game is ending... showing solution");
         currentGuessStatus = inputWordGame;
         change_known_word(currentGuessStatus);
+        tremola.storedGame = "";
+        persist();
         givenUp = true;
     } else {
         console.log("There is no game running")
@@ -82,9 +84,9 @@ function setupGame(incoming) { //-> eval("setupGame(word)")
     False otherwise
 */
 function gameEnd() {
-    console.log("currentGuessStatus:", currentGuessStatus);
+    // console.log("currentGuessStatus:", currentGuessStatus);
     console.log("remainingLives:", remainingLives);
-    console.log("currentGuessStatus == inputWordGame?", currentGuessStatus == inputWordGame);
+    //console.log("currentGuessStatus == inputWordGame?", currentGuessStatus == inputWordGame);
     return (currentGuessStatus == null || remainingLives <= 0 || currentGuessStatus == inputWordGame);
 }
 
