@@ -1011,9 +1011,9 @@ function b2f_initialize(id) {
 }
 
 function load_hangman_word(){
-    console.log("Loaded 0: " + tremola.storedGame)
+
     if (tremola.storedGame != "" && tremola.storedGame != null) {
-            console.log("Loaded 1: " + tremola.storedGame)
+            console.log("Loaded: " + tremola.storedGame)
             setupGame(tremola.storedGame)
         }
 

@@ -9,6 +9,7 @@ function show_solution() {
         currentGuessStatus = inputWordGame;
         change_known_word(currentGuessStatus);
         tremola.storedGame = "";
+        console.log("tremola.savedGame:",tremola.storedGame);
         persist();
         givenUp = true;
     } else {
@@ -122,27 +123,21 @@ function wrongGuess() {
 */
 function change_picture(source) {
     // console.log('hangman_image.src NOW:   ', document.getElementById('hangman_image').src)
-    // --> CANNOT REFERENCE hangman_image.src DIRECTLY.
-    // --> INSTANCE OF hangman_image MUST BE CALLED BY ITS 'ID' AND THEN THE SPECIFIC ELEMENT REFERENCED WE WANT TO MANIPULATE
-
     // console.log('UPDATE IMAGE TO:', source);
 
-    // CREATE INSTANCE OF hangman_image
     // GET "img" ATTRIBUTE FROM "hangman-image" TO DIRECTLY MANIPULATE IT!
     var hangmanImage = document.getElementById("hangman_image"); // SELECT hangman_image ELEMENT: <div id="hangman_image" ... </div>
     console.log('OBJECT OF hangmanImage:', hangmanImage);
     var imageElement = hangmanImage.getElementsByTagName("img")[0]; // SELECT ELEMENT IT IS ACCESSING: // <img src= "..." alt="..." ..>
     console.log('GET ELEMENT WITH "img" TAG --> imageElement:', imageElement);
 
-    // SOURCE AND ALT ATTRIBUTES OF OLD IMAGE
+    // ALT ATTRIBUTES OF OLD IMAGE
     console.log('CURRENT PICTURE (alt):  ', imageElement.alt);
-    // console.log('NOW: SOURCE', imageElement.src);
 
     // UPDATE SOURCE AND ALT ATTRIBUTES OF IMAGE
     imageElement.src = source;                       // PATH TO IMAGE (IS PARAMETER OF FUNCTION)
     imageElement.alt = "Hangman Picture: " + source; // NAME OF IMAGE
     console.log('UPDATE PICTURE TO (alt):', imageElement.alt);
-    // console.log('UPDATE: SOURCE:', imageElement.src);
 
 
 }
