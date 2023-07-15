@@ -8,8 +8,6 @@ function show_solution() {
         console.log("Game is ending... showing solution");
         currentGuessStatus = inputWordGame;
         change_known_word(currentGuessStatus);
-        tremola.storedGame = "";
-        console.log("tremola.savedGame:",tremola.storedGame);
         persist();
         givenUp = true;
     } else {
